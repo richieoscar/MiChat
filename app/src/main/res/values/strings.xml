@@ -2,4 +2,9 @@
     <string name="app_name">MiChat</string>
     <string name="error_msg">No Internet</string>
     <string name="empty_message">Message Empty</string>
+    <string name="hint">Enter a message</string>
+    <string name="send">Send</string>
+    <string name="enter_unique_id">Enter Unique ID</string>
+    <string name="go">Go</string>
+    <string name="header">Mi Chat</string>
 </resources>

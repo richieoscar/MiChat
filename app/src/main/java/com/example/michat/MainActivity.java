@@ -34,11 +34,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         //checks for client or device network connection
-        if(checkNetworkConnection()){
+        if (checkNetworkConnection()) {
             //connects to server if network available
             createConnection();
-        }
-        else {
+        } else {
             //Displays error message
             Toast.makeText(this, R.string.error_msg, Toast.LENGTH_SHORT).show();
         }
@@ -50,14 +49,22 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void  bindViews(){
+    private void bindViews() {
         uniqueId = findViewById(R.id.editText_topic);
         go = findViewById(R.id.button_go);
     }
 
+    @Override
+    protected void onDestroy() {
+        try {
+            client.disconnect();
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+        super.onDestroy();
+    }
 
-
-    public void createConnection(){
+    public void createConnection() {
         clientId = MqttClient.generateClientId();
         client = new MqttAndroidClient(this.getApplicationContext(), "tcp://broker.hivemq.com:1883", clientId);
 
@@ -85,25 +92,26 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private Boolean checkNetworkConnection(){
+    private Boolean checkNetworkConnection() {
         ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
-       return  cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnectedOrConnecting();
+        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 
-    private void subscribe(){
+    private void subscribe() {
 
-        go.setOnClickListener((v)-> {
+        go.setOnClickListener((v) -> {
 
-        String topic = uniqueId.getText().toString().trim();
+            String topic = uniqueId.getText().toString().trim();
 
-        if(topic.isEmpty()){
-            uniqueId.setError("Field is required");
-        }
-        else {
-            Intent intent = new Intent(this, ChatActivity.class);
-            intent.putExtra("sub", topic);
-            startActivity(intent);
-        }
+            if (topic.isEmpty()) {
+                uniqueId.setError("Field is required");
+            } else {
+                Intent intent = new Intent(this, ChatActivity.class);
+                intent.putExtra("sub", topic);
+                startActivity(intent);
+                uniqueId.setText("");
+                finish();
+            }
 
             try {
                 IMqttToken subToken = client.subscribe(topic, QOS);
@@ -126,9 +134,6 @@ public class MainActivity extends AppCompatActivity {
             }
 
         });
-
-
-
 
 
     }

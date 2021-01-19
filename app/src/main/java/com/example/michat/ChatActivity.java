@@ -1,5 +1,6 @@
 package com.example.michat;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
@@ -7,6 +8,8 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -31,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 public class ChatActivity extends AppCompatActivity {
 
@@ -53,26 +57,51 @@ public class ChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
+
         if (checkNetworkConnection()) {
             createConnection();
         } else {
-            Toast.makeText(this, "No network", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "No Internet", Toast.LENGTH_SHORT).show();
         }
 
         //instantiate views
         bindViews();
-       // setUpMessageListAdapter();
+       setUpMessageListAdapter();
 
 
         //getTopic(Unique ID)
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra("sub")) {
             topic = intent.getStringExtra("sub");
+            getSupportActionBar().setTitle("Topic(" +topic +")");
         }
 
-
+        //publish message
         sendMessage();
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+
+       int iD = item.getItemId();
+        if(iD == R.id.disconnect ){
+            try {
+                client.disconnect();
+                startActivity(new Intent(this, MainActivity.class));
+                finish();
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+        }
+        return true;
     }
 
     @Override
@@ -102,16 +131,28 @@ public class ChatActivity extends AppCompatActivity {
         messagesList.setAdapter(messagesListAdapter);
     }
 
+    @Override
+    protected void onDestroy() {
+        try {
+            client.disconnect();
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+        super.onDestroy();
+    }
+
     private void createConnection() {
         clientId = MqttClient.generateClientId();
         MqttConnectOptions options = new MqttConnectOptions();
-        options.isAutomaticReconnect();
+
         options.setKeepAliveInterval(INTERVAl);
-        options.isCleanSession();
-        client = new MqttAndroidClient(this.getApplicationContext(), "tcp://broker.hivemq.com:1883", clientId);
+        options.setCleanSession(false);
+        String serverURI = "tcp://broker.hivemq.com:1883";
+        client = new MqttAndroidClient(this.getApplicationContext(), serverURI, clientId);
 
 
         try {
+
             IMqttToken token = client.connect(options);
             token.setActionCallback(new IMqttActionListener() {
                 @Override
@@ -122,7 +163,6 @@ public class ChatActivity extends AppCompatActivity {
 
                     //after connection the sender also subscribes to the topic
                     subscribeToBroker(topic);
-
 
                 }
 
@@ -137,6 +177,7 @@ public class ChatActivity extends AppCompatActivity {
         } catch (MqttException e) {
             e.printStackTrace();
         }
+
 
     }
 
@@ -164,8 +205,7 @@ public class ChatActivity extends AppCompatActivity {
         } catch (MqttException e) {
             e.printStackTrace();
         }
-        messagesListAdapter = new MessagesListAdapter("Oscar", null);
-        messagesList.setAdapter(messagesListAdapter);
+
 
         client.setCallback(new MqttCallback() {
             @Override
@@ -175,7 +215,11 @@ public class ChatActivity extends AppCompatActivity {
 
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
+               // String msg = message.toString();
+               // Toast.makeText(ChatActivity.this, msg, Toast.LENGTH_SHORT).show();
                     displayMessages(message);
+
+
             }
 
             @Override
@@ -196,6 +240,7 @@ public class ChatActivity extends AppCompatActivity {
        send.setOnClickListener((v -> {
         Toast.makeText(ChatActivity.this, "Sent", Toast.LENGTH_SHORT).show();
           send();
+
         }));
 
     }
@@ -252,7 +297,8 @@ public class ChatActivity extends AppCompatActivity {
         addMessage.add(msg);
         Log.d(TAG, "displayMessages: "+msg);
 
-       // messagesListAdapter.addToStart(msg, true);
+       //messagesListAdapter.addToStart(msg, true);
+      messagesListAdapter.notifyDataSetChanged();
         messagesListAdapter.addToEnd(addMessage, true);
 
     }
@@ -261,4 +307,5 @@ public class ChatActivity extends AppCompatActivity {
 
         messagesListAdapter.deleteSelectedMessages();
     }
+
 }

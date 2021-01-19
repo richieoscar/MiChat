@@ -22,31 +22,38 @@
     <EditText
         android:id="@+id/editText_message"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_height="41dp"
+        android:layout_marginStart="16dp"
         android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/edit_text_shape"
         android:ems="10"
         android:fontFamily="@font/roboto"
         android:gravity="start|top"
-        android:hint="Enter a message"
+        android:hint="@string/hint"
         android:inputType="textMultiLine"
+        android:padding="5dp"
+        android:textSize="14sp"
         android:textStyle="italic"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/send_button"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/send_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="93dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
-        android:text="Send"
+        android:layout_marginBottom="8dp"
+        android:text="@string/send"
         android:textAllCaps="false"
         android:visibility="visible"
+        app:cornerRadius="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/messageListing" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
