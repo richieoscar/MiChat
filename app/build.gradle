@@ -24,7 +24,7 @@ android {
     }
     repositories {
         maven {
-            url "https://repo.eclipse.org/content/repositories/paho-releases/"
+            url "https://repo.eclipse.org/content/repositories/paho-snapshots/"
         }
     }
     compileOptions {
@@ -43,8 +43,8 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
     //MQTT
-    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0'
-    implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.0'
+    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.0.3-SNAPSHOT'
+    implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.0.3-SNAPSHOT'
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
 
 

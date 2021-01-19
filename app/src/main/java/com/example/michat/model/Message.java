@@ -1,6 +1,5 @@
 package com.example.michat.model;
 
-import com.stfalcon.chatkit.commons.models.IDialog;
 import com.stfalcon.chatkit.commons.models.IMessage;
 import com.stfalcon.chatkit.commons.models.IUser;
 
@@ -10,13 +9,13 @@ public class Message implements IMessage {
 
     private String Id;
     private String Text;
-    private User user;
+    private Author author;
     private Date createdAt;
 
-    public Message(String id, String text, User user, Date date){
+    public Message(String id, String text, Author author, Date date){
         Id = id;
         Text = text;
-        this.user = user;
+        this.author = author;
     }
     @Override
     public String getId() {
@@ -30,7 +29,7 @@ public class Message implements IMessage {
 
     @Override
     public IUser getUser() {
-        return user;
+        return author;
     }
 
     @Override

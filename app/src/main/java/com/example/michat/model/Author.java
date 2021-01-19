@@ -2,13 +2,13 @@ package com.example.michat.model;
 
 import com.stfalcon.chatkit.commons.models.IUser;
 
-public class User  implements IUser {
+public class Author implements IUser {
 
     private String Id;
     private String Name;
     private String Avatar;
 
-    public User(String id, String name, String avatar){
+    public Author(String id, String name, String avatar){
         Id = id;
         Name = name;
         Avatar = avatar;

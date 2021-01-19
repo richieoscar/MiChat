@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TOPIC = "Subscribe";
     private MqttAndroidClient client;
     private String clientId;
+    public static final int QOS = 1;
 
 
     @Override
@@ -42,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, R.string.error_msg, Toast.LENGTH_SHORT).show();
         }
 
-        //instatiate views
+        //instantiate views
         bindViews();
         subscribe();
 
@@ -103,10 +104,9 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra("sub", topic);
             startActivity(intent);
         }
-            //String topic = "foo/bar";
-            int qos = 1;
+
             try {
-                IMqttToken subToken = client.subscribe(topic, qos);
+                IMqttToken subToken = client.subscribe(topic, QOS);
                 subToken.setActionCallback(new IMqttActionListener() {
                     @Override
                     public void onSuccess(IMqttToken asyncActionToken) {
@@ -117,8 +117,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
                         Log.d(TAG, "onFailure: could not subscribe to broker");
-                        // The subscription could not be performed, maybe the user was not
-                        // authorized to subscribe on the specified topic e.g. using wildcards
+
 
                     }
                 });

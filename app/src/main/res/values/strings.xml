@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">MiChat</string>
     <string name="error_msg">No Internet</string>
+    <string name="empty_message">Message Empty</string>
 </resources>

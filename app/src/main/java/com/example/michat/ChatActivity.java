@@ -12,7 +12,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.michat.model.Message;
-import com.example.michat.model.User;
+import com.example.michat.model.Author;
 import com.stfalcon.chatkit.messages.MessagesList;
 import com.stfalcon.chatkit.messages.MessagesListAdapter;
 
@@ -22,23 +22,28 @@ import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 public class ChatActivity extends AppCompatActivity {
 
     private MessagesList messagesList;
     private MessagesListAdapter<Message> messagesListAdapter;
+   // private MessageInput messageInput;
 
     private MqttAndroidClient client;
     private String clientId;
     private String topic;
 
     private static final String TAG = "ChatActivity";
+    private static  final int INTERVAl = 1000*60*60;
     private EditText message;
     private Button send;
 
@@ -56,7 +61,7 @@ public class ChatActivity extends AppCompatActivity {
 
         //instantiate views
         bindViews();
-        setUpMessageListAdapter();
+       // setUpMessageListAdapter();
 
 
         //getTopic(Unique ID)
@@ -68,6 +73,20 @@ public class ChatActivity extends AppCompatActivity {
 
         sendMessage();
 
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+
+        if(client.isConnected()){
+        subscribeToBroker(topic);
+
+
+        }
+        else{
+            createConnection();
+        }
     }
 
     private void bindViews() {
@@ -85,10 +104,15 @@ public class ChatActivity extends AppCompatActivity {
 
     private void createConnection() {
         clientId = MqttClient.generateClientId();
+        MqttConnectOptions options = new MqttConnectOptions();
+        options.isAutomaticReconnect();
+        options.setKeepAliveInterval(INTERVAl);
+        options.isCleanSession();
         client = new MqttAndroidClient(this.getApplicationContext(), "tcp://broker.hivemq.com:1883", clientId);
 
+
         try {
-            IMqttToken token = client.connect();
+            IMqttToken token = client.connect(options);
             token.setActionCallback(new IMqttActionListener() {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
@@ -118,7 +142,6 @@ public class ChatActivity extends AppCompatActivity {
 
     private void subscribeToBroker(String topic) {
         topic = this.topic;
-        //String topic = "foo/bar";
         int qos = 1;
         try {
             IMqttToken subToken = client.subscribe(topic, qos);
@@ -127,19 +150,22 @@ public class ChatActivity extends AppCompatActivity {
                 public void onSuccess(IMqttToken asyncActionToken) {
                     // The message was published
                     Log.d(TAG, "onSuccess: subscribed");
+
                 }
 
                 @Override
                 public void onFailure(IMqttToken asyncActionToken,
                                       Throwable exception) {
-                    // The subscription could not be performed, maybe the user was not
-                    // authorized to subscribe on the specified topic e.g. using wildcards
+                    // could not subscribe to broker
+                    Log.d(TAG, "onFailure: not subscribed");
 
                 }
             });
         } catch (MqttException e) {
             e.printStackTrace();
         }
+        messagesListAdapter = new MessagesListAdapter("Oscar", null);
+        messagesList.setAdapter(messagesListAdapter);
 
         client.setCallback(new MqttCallback() {
             @Override
@@ -158,6 +184,7 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
+
     }
 
     private Boolean checkNetworkConnection() {
@@ -166,48 +193,72 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void sendMessage() {
-        send.setOnClickListener((v -> {
-            Toast.makeText(ChatActivity.this, "Sent", Toast.LENGTH_SHORT).show();
-            send();
+       send.setOnClickListener((v -> {
+        Toast.makeText(ChatActivity.this, "Sent", Toast.LENGTH_SHORT).show();
+          send();
         }));
 
     }
 
     private void send() {
-        String messages = message.getText().toString().trim();
+       String messages = message.getText().toString();
 
         if (messages.isEmpty()) {
-            Toast.makeText(ChatActivity.this, "You cant send an empty message", Toast.LENGTH_SHORT).show();
+            Toast.makeText(ChatActivity.this, R.string.empty_message, Toast.LENGTH_SHORT).show();
         } else {
 
             String payload = messages;
             byte[] encodedPayload = new byte[0];
             try {
                 encodedPayload = payload.getBytes("UTF-8");
-                MqttMessage message = new MqttMessage(encodedPayload);
-                message.setRetained(true);
-                client.publish(topic, message);
-                Log.d(TAG, "send: message published" +message.toString());
+                MqttMessage mqttMessage = new MqttMessage(encodedPayload);
+                mqttMessage.setRetained(true);
+
+                client.publish(topic, mqttMessage);
+                Log.d(TAG, "send: mqttMessage published" +mqttMessage.toString());
+                message.setText("");
+
+
             } catch (UnsupportedEncodingException | MqttException e) {
                 e.printStackTrace();
             }
         }
 
 
+
+    }
+
+    private void loadMoreMessages(){
+        messagesListAdapter.setLoadMoreListener(new MessagesListAdapter.OnLoadMoreListener() {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount) {
+
+
+            }
+        });
     }
 
     private void displayMessages(MqttMessage message){
-            String messages = message.toString();
-        User user = new User("Oscar", "df", null);
+        String messages = message.toString();
+        Author author = new Author("Oscar", "Os", null);
 
         Date date = Calendar.getInstance().getTime();
 
-        String messageToDisplay = messages.substring(0, messages.length()-1);
+        String displayMessage = messages;
 
-        Message message1 = new Message("Doe", messageToDisplay, user, date);
-        Log.d(TAG, "displayMessages: "+message1);
+        List<Message> addMessage = new ArrayList<>();
 
-        messagesListAdapter.addToStart(message1, true);
+        Message msg = new Message("Qui", displayMessage, author, date);
+        addMessage.add(msg);
+        Log.d(TAG, "displayMessages: "+msg);
 
+       // messagesListAdapter.addToStart(msg, true);
+        messagesListAdapter.addToEnd(addMessage, true);
+
+    }
+
+    private void deleteMessage(Message message){
+
+        messagesListAdapter.deleteSelectedMessages();
     }
 }
