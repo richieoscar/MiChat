@@ -15,11 +15,13 @@ import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
+    public static final int KEEP_ALIVE_INTERVAL = 360000;
     private EditText uniqueId;
     private Button go;
     private static final String TOPIC = "Subscribe";
@@ -54,22 +56,18 @@ public class MainActivity extends AppCompatActivity {
         go = findViewById(R.id.button_go);
     }
 
-    @Override
-    protected void onDestroy() {
-        try {
-            client.disconnect();
-        } catch (MqttException e) {
-            e.printStackTrace();
-        }
-        super.onDestroy();
-    }
+
 
     public void createConnection() {
         clientId = MqttClient.generateClientId();
-        client = new MqttAndroidClient(this.getApplicationContext(), "tcp://broker.hivemq.com:1883", clientId);
+        MqttConnectOptions options = new MqttConnectOptions();
+        options.setCleanSession(false);
+        options.setKeepAliveInterval(KEEP_ALIVE_INTERVAL);
+        String serverURI = "tcp://broker.hivemq.com:1883";
+        client = new MqttAndroidClient(this.getApplicationContext(), serverURI, clientId);
 
         try {
-            IMqttToken token = client.connect();
+            IMqttToken token = client.connect(options);
             token.setActionCallback(new IMqttActionListener() {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
@@ -110,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("sub", topic);
                 startActivity(intent);
                 uniqueId.setText("");
-                finish();
+
             }
 
             try {

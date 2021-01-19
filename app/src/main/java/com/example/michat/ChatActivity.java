@@ -1,6 +1,7 @@
 package com.example.michat;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
@@ -73,7 +74,9 @@ public class ChatActivity extends AppCompatActivity {
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra("sub")) {
             topic = intent.getStringExtra("sub");
-            getSupportActionBar().setTitle("Topic(" +topic +")");
+          ActionBar ab = getSupportActionBar();
+                  ab.setTitle("Topic(" +topic +")");
+                  ab.setDisplayHomeAsUpEnabled(true);
         }
 
         //publish message
@@ -131,15 +134,15 @@ public class ChatActivity extends AppCompatActivity {
         messagesList.setAdapter(messagesListAdapter);
     }
 
-    @Override
-    protected void onDestroy() {
-        try {
-            client.disconnect();
-        } catch (MqttException e) {
-            e.printStackTrace();
-        }
-        super.onDestroy();
-    }
+  //  @Override
+//    protected void onDestroy() {
+//        try {
+//            client.disconnect();
+//        } catch (MqttException e) {
+//            e.printStackTrace();
+//        }
+//        super.onDestroy();
+//    }
 
     private void createConnection() {
         clientId = MqttClient.generateClientId();
@@ -285,7 +288,7 @@ public class ChatActivity extends AppCompatActivity {
 
     private void displayMessages(MqttMessage message){
         String messages = message.toString();
-        Author author = new Author("Oscar", "Os", null);
+        Author author = new Author("Osc", "Os", null);
 
         Date date = Calendar.getInstance().getTime();
 
@@ -293,7 +296,7 @@ public class ChatActivity extends AppCompatActivity {
 
         List<Message> addMessage = new ArrayList<>();
 
-        Message msg = new Message("Qui", displayMessage, author, date);
+        Message msg = new Message("Oscar", displayMessage, author, date);
         addMessage.add(msg);
         Log.d(TAG, "displayMessages: "+msg);
 

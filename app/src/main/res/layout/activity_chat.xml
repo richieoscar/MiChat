@@ -23,7 +23,7 @@
         android:id="@+id/editText_message"
         android:layout_width="0dp"
         android:layout_height="41dp"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:background="@drawable/edit_text_shape"
@@ -42,10 +42,10 @@
 
     <Button
         android:id="@+id/send_button"
-        android:layout_width="93dp"
-        android:layout_height="50dp"
+        android:layout_width="100dp"
+        android:layout_height="54dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:text="@string/send"
         android:textAllCaps="false"
