@@ -17,6 +17,11 @@ public class Message implements IMessage {
         Text = text;
         this.author = author;
     }
+
+    public Message(String id , String text){
+        Text = text;
+        Id = id;
+    }
     @Override
     public String getId() {
         return Id;

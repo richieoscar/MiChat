@@ -13,10 +13,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import com.example.michat.model.Message;
 import com.example.michat.model.Author;
+import com.example.michat.model.User;
 import com.stfalcon.chatkit.messages.MessagesList;
 import com.stfalcon.chatkit.messages.MessagesListAdapter;
 
@@ -42,6 +44,7 @@ public class ChatActivity extends AppCompatActivity {
     private MessagesList messagesList;
     private MessagesListAdapter<Message> messagesListAdapter;
    // private MessageInput messageInput;
+    ListView listView;
 
     private MqttAndroidClient client;
     private String clientId;
@@ -51,6 +54,7 @@ public class ChatActivity extends AppCompatActivity {
     private static  final int INTERVAl = 1000*60*60;
     private EditText message;
     private Button send;
+    private UserAdapter adapter;
 
 
     @Override
@@ -125,13 +129,20 @@ public class ChatActivity extends AppCompatActivity {
         messagesList = new MessagesList(this);
         message = findViewById(R.id.editText_message);
         send = findViewById(R.id.send_button);
-        messagesList = findViewById(R.id.messageListing);
+       // messagesList = findViewById(R.id.messageListing);
+        listView = findViewById(R.id.listView);
+
+
     }
 
     private void setUpMessageListAdapter() {
 
-        messagesListAdapter = new MessagesListAdapter("Oscar", null);
-        messagesList.setAdapter(messagesListAdapter);
+       // messagesListAdapter = new MessagesListAdapter("Oscar", null);
+       // messagesList.setAdapter(messagesListAdapter);
+        ArrayList<User> arrayMesages = new ArrayList<>();
+
+        adapter = new UserAdapter(this,arrayMesages);
+        listView.setAdapter(adapter);
     }
 
   //  @Override
@@ -220,8 +231,10 @@ public class ChatActivity extends AppCompatActivity {
             public void messageArrived(String topic, MqttMessage message) throws Exception {
                // String msg = message.toString();
                // Toast.makeText(ChatActivity.this, msg, Toast.LENGTH_SHORT).show();
-                    displayMessages(message);
-
+                   // displayMessages(message);
+                String msg = message.toString();
+                adapter.clear();
+                addToMessageListView(msg);
 
             }
 
@@ -255,6 +268,8 @@ public class ChatActivity extends AppCompatActivity {
             Toast.makeText(ChatActivity.this, R.string.empty_message, Toast.LENGTH_SHORT).show();
         } else {
 
+           addToMessageListView(messages);
+
             String payload = messages;
             byte[] encodedPayload = new byte[0];
             try {
@@ -276,19 +291,29 @@ public class ChatActivity extends AppCompatActivity {
 
     }
 
-    private void loadMoreMessages(){
-        messagesListAdapter.setLoadMoreListener(new MessagesListAdapter.OnLoadMoreListener() {
-            @Override
-            public void onLoadMore(int page, int totalItemsCount) {
+    private void addToMessageListView(String messages) {
+
+       // List<Message>  dMessages = new ArrayList<>();
+       // Author author = new Author("Osc", "ric", null);
+      // Date sDate = Calendar.getInstance().getTime();
+
+      //  Message msf = new Message("ric", messages, author, sDate );
+      //  dMessages.add(msf);
+       // messagesListAdapter.notifyDataSetChanged();
+      //  messagesListAdapter.addToEnd(dMessages, true);
+
+        User newMsg = new User(messages);
+
+        adapter.add(newMsg);
 
 
-            }
-        });
     }
+
+
 
     private void displayMessages(MqttMessage message){
         String messages = message.toString();
-        Author author = new Author("Osc", "Os", null);
+        Author author = new Author("Osc", "Oscar", null);
 
         Date date = Calendar.getInstance().getTime();
 
@@ -296,13 +321,13 @@ public class ChatActivity extends AppCompatActivity {
 
         List<Message> addMessage = new ArrayList<>();
 
-        Message msg = new Message("Oscar", displayMessage, author, date);
+        Message msg = new Message("Os", displayMessage, author, date);
         addMessage.add(msg);
         Log.d(TAG, "displayMessages: "+msg);
 
        //messagesListAdapter.addToStart(msg, true);
-      messagesListAdapter.notifyDataSetChanged();
-        messagesListAdapter.addToEnd(addMessage, true);
+      //messagesListAdapter.notifyDataSetChanged();
+       // messagesListAdapter.addToEnd(addMessage, true);
 
     }
 
