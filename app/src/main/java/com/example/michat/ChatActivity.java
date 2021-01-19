@@ -233,7 +233,7 @@ public class ChatActivity extends AppCompatActivity {
                // Toast.makeText(ChatActivity.this, msg, Toast.LENGTH_SHORT).show();
                    // displayMessages(message);
                 String msg = message.toString();
-                adapter.clear();
+               // adapter.clear();
                 addToMessageListView(msg);
 
             }
@@ -303,8 +303,8 @@ public class ChatActivity extends AppCompatActivity {
       //  messagesListAdapter.addToEnd(dMessages, true);
 
         User newMsg = new User(messages);
-
         adapter.add(newMsg);
+        adapter.notifyDataSetChanged();
 
 
     }
