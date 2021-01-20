@@ -5,4 +5,7 @@
     <item
         android:id="@+id/disconnect"
         android:title="Leave Chat" />
+    <item
+        android:id="@+id/clear_chat"
+        android:title="Clear Chat" />
 </menu>

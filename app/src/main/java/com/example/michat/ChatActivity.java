@@ -1,9 +1,5 @@
 package com.example.michat;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -11,16 +7,17 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.michat.model.Message;
-import com.example.michat.model.Author;
-import com.example.michat.model.User;
-import com.stfalcon.chatkit.messages.MessagesList;
-import com.stfalcon.chatkit.messages.MessagesListAdapter;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
@@ -34,27 +31,23 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
 
 public class ChatActivity extends AppCompatActivity {
 
-    private MessagesList messagesList;
-    private MessagesListAdapter<Message> messagesListAdapter;
-   // private MessageInput messageInput;
-    ListView listView;
+
+    private ListView listView;
 
     private MqttAndroidClient client;
     private String clientId;
     private String topic;
 
     private static final String TAG = "ChatActivity";
-    private static  final int INTERVAl = 1000*60*60;
+    private static final int INTERVAl = 1000 * 60 * 60;
+
     private EditText message;
     private Button send;
-    private UserAdapter adapter;
+    private MessageAdapter adapter;
+    public static final String SERVER_URI = "tcp://broker.hivemq.com:1883";
 
 
     @Override
@@ -62,7 +55,7 @@ public class ChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-
+        //check for device network connection
         if (checkNetworkConnection()) {
             createConnection();
         } else {
@@ -71,20 +64,21 @@ public class ChatActivity extends AppCompatActivity {
 
         //instantiate views
         bindViews();
-       setUpMessageListAdapter();
+        setUpMessageListAdapter();
 
 
         //getTopic(Unique ID)
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra("sub")) {
             topic = intent.getStringExtra("sub");
-          ActionBar ab = getSupportActionBar();
-                  ab.setTitle("Topic(" +topic +")");
-                  ab.setDisplayHomeAsUpEnabled(true);
+            ActionBar ab = getSupportActionBar();
+            ab.setTitle("Topic(" + topic + ")");
+            ab.setDisplayHomeAsUpEnabled(true);
         }
 
         //publish message
         sendMessage();
+
 
     }
 
@@ -98,62 +92,58 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
-       int iD = item.getItemId();
-        if(iD == R.id.disconnect ){
-            try {
-                client.disconnect();
-                startActivity(new Intent(this, MainActivity.class));
-                finish();
-            } catch (MqttException e) {
-                e.printStackTrace();
+        int iD = item.getItemId();
+
+        switch (iD) {
+            case R.id.disconnect: {
+
+                try {
+                    client.disconnect();
+                    startActivity(new Intent(this, MainActivity.class));
+                    finish();
+                } catch (MqttException e) {
+                    e.printStackTrace();
+                }
+                return true;
             }
+            case R.id.clear_chat: {
+                adapter.clear();
+                return true;
+            }
+            default:
+                return false;
         }
-        return true;
+
     }
 
     @Override
     protected void onRestart() {
         super.onRestart();
 
-        if(client.isConnected()){
-        subscribeToBroker(topic);
+        if (client.isConnected()) {
+            subscribeToBroker(topic);
 
 
-        }
-        else{
+        } else {
             createConnection();
         }
     }
 
     private void bindViews() {
-        messagesList = new MessagesList(this);
         message = findViewById(R.id.editText_message);
         send = findViewById(R.id.send_button);
-       // messagesList = findViewById(R.id.messageListing);
         listView = findViewById(R.id.listView);
 
 
     }
 
     private void setUpMessageListAdapter() {
+        ArrayList<Message> arrayMessages = new ArrayList<>();
 
-       // messagesListAdapter = new MessagesListAdapter("Oscar", null);
-       // messagesList.setAdapter(messagesListAdapter);
-        ArrayList<User> arrayMesages = new ArrayList<>();
-
-        adapter = new UserAdapter(this,arrayMesages);
+        adapter = new MessageAdapter(this, arrayMessages);
         listView.setAdapter(adapter);
     }
 
-  //  @Override
-//    protected void onDestroy() {
-//        try {
-//            client.disconnect();
-//        } catch (MqttException e) {
-//            e.printStackTrace();
-//        }
-//        super.onDestroy();
-//    }
 
     private void createConnection() {
         clientId = MqttClient.generateClientId();
@@ -161,8 +151,7 @@ public class ChatActivity extends AppCompatActivity {
 
         options.setKeepAliveInterval(INTERVAl);
         options.setCleanSession(false);
-        String serverURI = "tcp://broker.hivemq.com:1883";
-        client = new MqttAndroidClient(this.getApplicationContext(), serverURI, clientId);
+        client = new MqttAndroidClient(this.getApplicationContext(), SERVER_URI, clientId);
 
 
         try {
@@ -229,12 +218,12 @@ public class ChatActivity extends AppCompatActivity {
 
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
-               // String msg = message.toString();
-               // Toast.makeText(ChatActivity.this, msg, Toast.LENGTH_SHORT).show();
-                   // displayMessages(message);
                 String msg = message.toString();
-               // adapter.clear();
+                Message delMessage = new Message(msg);
+
                 addToMessageListView(msg);
+
+                deleteMessage(delMessage);
 
             }
 
@@ -253,22 +242,19 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void sendMessage() {
-       send.setOnClickListener((v -> {
-        Toast.makeText(ChatActivity.this, "Sent", Toast.LENGTH_SHORT).show();
-          send();
+        send.setOnClickListener((v -> {
+            send();
 
         }));
 
     }
 
     private void send() {
-       String messages = message.getText().toString();
+        String messages = message.getText().toString();
 
         if (messages.isEmpty()) {
             Toast.makeText(ChatActivity.this, R.string.empty_message, Toast.LENGTH_SHORT).show();
         } else {
-
-           addToMessageListView(messages);
 
             String payload = messages;
             byte[] encodedPayload = new byte[0];
@@ -278,7 +264,7 @@ public class ChatActivity extends AppCompatActivity {
                 mqttMessage.setRetained(true);
 
                 client.publish(topic, mqttMessage);
-                Log.d(TAG, "send: mqttMessage published" +mqttMessage.toString());
+                Log.d(TAG, "send: mqttMessage published" + mqttMessage.toString());
                 message.setText("");
 
 
@@ -288,52 +274,27 @@ public class ChatActivity extends AppCompatActivity {
         }
 
 
-
     }
 
     private void addToMessageListView(String messages) {
 
-       // List<Message>  dMessages = new ArrayList<>();
-       // Author author = new Author("Osc", "ric", null);
-      // Date sDate = Calendar.getInstance().getTime();
-
-      //  Message msf = new Message("ric", messages, author, sDate );
-      //  dMessages.add(msf);
-       // messagesListAdapter.notifyDataSetChanged();
-      //  messagesListAdapter.addToEnd(dMessages, true);
-
-        User newMsg = new User(messages);
+        Message newMsg = new Message(messages);
         adapter.add(newMsg);
         adapter.notifyDataSetChanged();
 
-
     }
 
+    private void deleteMessage(Message message) {
+        listView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                adapter.getPosition(message);
+                adapter.remove(message);
+                adapter.notifyDataSetChanged();
+            }
+        });
 
 
-    private void displayMessages(MqttMessage message){
-        String messages = message.toString();
-        Author author = new Author("Osc", "Oscar", null);
-
-        Date date = Calendar.getInstance().getTime();
-
-        String displayMessage = messages;
-
-        List<Message> addMessage = new ArrayList<>();
-
-        Message msg = new Message("Os", displayMessage, author, date);
-        addMessage.add(msg);
-        Log.d(TAG, "displayMessages: "+msg);
-
-       //messagesListAdapter.addToStart(msg, true);
-      //messagesListAdapter.notifyDataSetChanged();
-       // messagesListAdapter.addToEnd(addMessage, true);
-
-    }
-
-    private void deleteMessage(Message message){
-
-        messagesListAdapter.deleteSelectedMessages();
     }
 
 }

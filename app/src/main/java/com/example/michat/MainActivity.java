@@ -1,7 +1,5 @@
 package com.example.michat;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -10,6 +8,8 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
@@ -20,14 +20,17 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "MainActivity";
-    public static final int KEEP_ALIVE_INTERVAL = 360000;
     private EditText uniqueId;
     private Button go;
+
+    private static final String TAG = "MainActivity";
+    private static final int KEEP_ALIVE_INTERVAL = 360000;
     private static final String TOPIC = "Subscribe";
+    private static final String serverURI = "tcp://broker.hivemq.com:1883";
+    public static final int QOS = 1;
+
     private MqttAndroidClient client;
     private String clientId;
-    public static final int QOS = 1;
 
 
     @Override
@@ -56,14 +59,13 @@ public class MainActivity extends AppCompatActivity {
         go = findViewById(R.id.button_go);
     }
 
-
-
     public void createConnection() {
+        //connects to the broker server
         clientId = MqttClient.generateClientId();
         MqttConnectOptions options = new MqttConnectOptions();
         options.setCleanSession(false);
         options.setKeepAliveInterval(KEEP_ALIVE_INTERVAL);
-        String serverURI = "tcp://broker.hivemq.com:1883";
+
         client = new MqttAndroidClient(this.getApplicationContext(), serverURI, clientId);
 
         try {
@@ -72,7 +74,6 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
                     // We are connected
-                    Toast.makeText(MainActivity.this, "Connected", Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "onSuccess: connected");
                 }
 
@@ -101,9 +102,14 @@ public class MainActivity extends AppCompatActivity {
 
             String topic = uniqueId.getText().toString().trim();
 
-            if (topic.isEmpty()) {
+            if (!checkNetworkConnection()) {
+                Toast.makeText(MainActivity.this, "No internet", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (topic.isEmpty() && checkNetworkConnection()) {
                 uniqueId.setError("Field is required");
-            } else {
+                return;
+            } else if (!topic.isEmpty() && checkNetworkConnection()) {
                 Intent intent = new Intent(this, ChatActivity.class);
                 intent.putExtra("sub", topic);
                 startActivity(intent);

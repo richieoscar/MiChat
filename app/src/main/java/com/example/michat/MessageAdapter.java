@@ -11,16 +11,15 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.example.michat.model.User;
+import com.example.michat.model.Message;
 
 import java.util.ArrayList;
-import java.util.List;
 
-public class UserAdapter extends ArrayAdapter<User> {
+public class MessageAdapter extends ArrayAdapter<Message> {
 
 
-    public UserAdapter(@NonNull Context context,  @NonNull ArrayList<User> users) {
-        super(context, 0, users);
+    public MessageAdapter(@NonNull Context context, @NonNull ArrayList<Message> messages) {
+        super(context, 0, messages);
 
 
     }
@@ -28,13 +27,13 @@ public class UserAdapter extends ArrayAdapter<User> {
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-        User user = getItem(position);
+        Message message = getItem(position);
         if(convertView == null){
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_view, parent, false);
 
         }
             TextView msg = convertView.findViewById(R.id.textView_msg);
-            msg.setText(user.getMessage());
+            msg.setText(message.getMessage());
             return  convertView;
     }
 
